@@ -5,6 +5,7 @@ import Signup from "./pages/Signup.jsx";
 import Home from "./pages/Home.jsx";
 import AuthLayout from "./customComponents/AuthLayout.jsx";
 import Keep from "./pages/Keep.jsx";
+import Dashboard from "./pages/Dashboard.jsx";
 
 function App() {
     return (
@@ -16,6 +17,7 @@ function App() {
                     <Route path="/" element={<LandingPage />} />,
                     <Route path="/home" element={<Home />} />,
                     <Route path="/keep" element={<Keep />} />,
+                    <Route path="/dashboard" element={<Dashboard />} />,
                 ]}
             />
             <Route path="/login" element={<Login />} />
