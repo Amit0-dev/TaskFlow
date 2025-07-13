@@ -12,24 +12,52 @@ import { Label } from "@/components/ui/label";
 import { ShineBorder } from "@/components/magicui/shine-border";
 import { useState } from "react";
 import { MorphingText } from "@/components/magicui/morphing-text";
+import { authService } from "../api/authService.js";
+import { NavLink, useNavigate } from "react-router-dom";
+import { ToastContainer, toast } from "react-toastify";
 
 const Signup = () => {
+    console.log("Signup Run...")
     const [formData, setFormData] = useState({
         name: "",
         email: "",
         password: "",
     });
+    const [loading, setLoading] = useState(false);
+
+    const navigate = useNavigate();
 
     const handleOnChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
-    const handleSubmit = (e)=>{
-        e.preventDefault()
-        console.log(formData)
-    }
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setLoading(true);
+        try {
+            const response = await authService.register(formData);
+            console.log(response)
+            if (response.data.success) {
+                navigate("/login");
+            }
+        } catch (error) {
+            console.log("Inside Signup.jsx : ", error);
+            toast.error(error.message, {
+                position: "bottom-right",
+                autoClose: 3000,
+                hideProgressBar: false,
+                closeOnClick: false,
+                pauseOnHover: true,
+                draggable: true,
+                progress: undefined,
+                theme: "dark",
+            });
+        } finally {
+            setLoading(false);
+        }
+    };
 
-     const texts = [
+    const texts = [
         "Welcome Back",
         "Stay Focused",
         "Get Productive",
@@ -44,20 +72,23 @@ const Signup = () => {
 
     return (
         <div className="w-full min-h-screen bg-black text-white flex flex-col items-center gap-10 justify-center">
-
-<MorphingText texts={texts} />
+            <MorphingText texts={texts} />
 
             <Card className="relative overflow-hidden max-w-[350px] w-full">
                 <ShineBorder shineColor={["#A07CFE", "#FE8FB5", "#FFBE7B"]} />
-                <CardHeader>
-                    <CardTitle>SignUp</CardTitle>
-                    <CardDescription>Create an account to continue</CardDescription>
+                <CardHeader className={"flex items-center justify-between"}>
+                    <div className="flex flex-col gap-2">
+                        <CardTitle>SignUp</CardTitle>
+                        <CardDescription>Create an account to continue</CardDescription>
+                    </div>
+
+                    <NavLink className={"font-semibold"} to={"/login"}>Login</NavLink>
                 </CardHeader>
                 <CardContent>
                     <form onSubmit={handleSubmit}>
                         <div className="grid gap-4">
                             <div className="grid gap-2">
-                                <Label htmlFor="name">Email</Label>
+                                <Label htmlFor="name">Name</Label>
                                 <Input
                                     name="name"
                                     value={formData.name}
@@ -92,14 +123,28 @@ const Signup = () => {
                         </div>
 
                         <CardFooter className={"mt-10"}>
-                            <Button type="submit" className="w-full cursor-pointer">SignUp</Button>
+                            <Button type="submit" className="w-full cursor-pointer">
+                                {loading ? <div className="loader"></div> : "SignUp"}
+                            </Button>
                         </CardFooter>
                     </form>
                 </CardContent>
             </Card>
+
+            <ToastContainer
+                position="bottom-right"
+                autoClose={3000}
+                hideProgressBar={false}
+                newestOnTop
+                closeOnClick={false}
+                rtl={false}
+                pauseOnFocusLoss
+                draggable
+                pauseOnHover
+                theme="dark"
+            />
         </div>
     );
 };
 
 export default Signup;
-

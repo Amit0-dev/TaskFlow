@@ -3,18 +3,23 @@ import { MdDelete } from "react-icons/md";
 import "react-calendar-heatmap/dist/styles.css";
 import StreakHeatmap from "@/customComponents/StreakHeatMap";
 import Chart from "@/customComponents/Chart";
+import useAuthStore from "@/store/useAuthStore";
 
 const Home = () => {
+    console.log("Home Run...");
     const sampleData = [
         { date: "2025-07-01", status: "Completed", count: 5 },
         { date: "2025-07-02", status: "Partial", count: 2 },
         { date: "2025-07-03", status: "None", count: 0 },
     ];
 
+    const user = useAuthStore((state) => state.userData);
+
     return (
         <div className="w-full text-gray-300 pb-10">
-            <div className="w-full flex flex-col items-end justify-center gap-2 h-22 p-10 ">
+            <div className="w-full flex flex-col items-end justify-center gap-1 h-22 p-10 ">
                 <h4 className="font-medium text-xl tracking-wide">Streak: 🔥</h4>
+                <h4 className="font-medium text-lg tracking-wide">{`Hey 👋 ${user?.name}`}</h4>
                 <h4 className="font-medium tracking-wider">📆 July 11</h4>
             </div>
 

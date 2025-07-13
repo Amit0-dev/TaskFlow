@@ -1,7 +1,9 @@
+import useAuthStore from "@/store/useAuthStore";
 import React, { useState } from "react";
 
 const Dashboard = () => {
     const [localFileUrl, setLocalFileUrl] = useState(null);
+    const user = useAuthStore((state) => state.userData);
 
     return (
         <div className="w-full h-[calc(100vh-90px)]">
@@ -61,10 +63,10 @@ const Dashboard = () => {
                 <div className="w-[70%] h-full  flex justify-between items-center gap-3 text-gray-400 ">
                     <div className="flex flex-col gap-4">
                         <h2 className="text-xl font-semibold tracking-wider">
-                            Name: <span></span>
+                            Name: <span className="text-white ml-5">{user?.name}</span>
                         </h2>
                         <h2 className="text-xl font-semibold tracking-wider">
-                            Email: <span></span>
+                            Email: <span className="text-white ml-5">{user?.email}</span>
                         </h2>
                         <h2 className="text-xl font-semibold tracking-wider">
                             TotalTaskDone: <span></span>
