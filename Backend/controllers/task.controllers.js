@@ -200,4 +200,57 @@ const getYesterdayTasksForStreak = async (req, res) => {
 
 */
 
-export { createTask, updateTask, deleteTask, getAllTask, getYesterdayTasksForStreak };
+const updateTaskStatus = async (req, res) => {
+    const { taskId } = req.params;
+
+    if (!taskId) {
+        return res.status(400).json({
+            message: "Invalid taskID",
+        });
+    }
+    const { check } = req.body;
+
+    if (check) {
+        try {
+            const response = await Task.findByIdAndUpdate(taskId, { status: "Completed" });
+            if (!response) {
+                return res.status(200).json({
+                    message: "Task's status not Update",
+                });
+            }
+
+            return res.status(200).json({
+                success: true,
+                message: "Task's status Update",
+            });
+        } catch (error) {
+            return res.status(400).json({
+                success: false,
+                message: "Task's status not Update",
+                error,
+            });
+        }
+    } else {
+        try {
+            const response = await Task.findByIdAndUpdate(taskId, { status: "Pending" });
+            if (!response) {
+                return res.status(200).json({
+                    message: "Task's status not Update",
+                });
+            }
+
+            return res.status(200).json({
+                success: true,
+                message: "Task's status Update",
+            });
+        } catch (error) {
+            return res.status(400).json({
+                success: false,
+                message: "Task's status not Update",
+                error,
+            });
+        }
+    }
+};
+
+export { createTask, updateTask, deleteTask, getAllTask, getYesterdayTasksForStreak, updateTaskStatus };

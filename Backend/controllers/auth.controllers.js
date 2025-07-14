@@ -3,6 +3,8 @@ import crypto from "crypto";
 import nodemailer from "nodemailer";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import dayjs from "dayjs";
+import { Task } from "../models/task.model.js";
 
 const register = async (req, res) => {
     const { name, email, password } = req.body;
@@ -162,11 +164,32 @@ const logout = async (req, res) => {
     });
 };
 const getMe = async (req, res) => {
-    return res.status(200).json({
-        message: "User fetched successfully",
-        success: true,
-        user: req?.user
-    });
+    const today = dayjs().startOf("day").toDate(); // Gives 2025-07-13T00:00:00.000Z
+
+    try {
+        await Task.updateMany(
+            {
+                owner: req.user?._id,
+                dueDate: {
+                    $lte: today,
+                },
+                status: "Pending",
+            },
+            { status: "Skipped" }
+        );
+
+        return res.status(200).json({
+            message: "User fetched successfully",
+            success: true,
+            user: req?.user,
+        });
+    } catch (error) {
+        return res.status(400).json({
+            message: "Task status Error",
+            error,
+            success: false,
+        });
+    }
 };
 const changePassword = async (req, res) => {
     const { oldPassword, newPassword } = req.body;
