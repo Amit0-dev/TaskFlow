@@ -25,7 +25,7 @@ ChartJS.register(
 const Chart = ({ labels, counts }) => {
     const data = {
         labels,
-        datasets: [{ label: "Percentage", data: counts, backgroundColor: ['oklch(70.4% 0.191 22.216)', 'oklch(79.5% 0.184 86.047)'] }],
+        datasets: [{ label: "Count", data: counts, backgroundColor: ['oklch(70.4% 0.191 22.216)', 'oklch(79.5% 0.184 86.047)'] }],
     };
     const options = {
         responsive: true,

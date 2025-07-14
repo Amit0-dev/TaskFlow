@@ -4,6 +4,24 @@ import "react-calendar-heatmap/dist/styles.css";
 import StreakHeatmap from "@/customComponents/StreakHeatMap";
 import Chart from "@/customComponents/Chart";
 import useAuthStore from "@/store/useAuthStore";
+import { Button } from "@/components/ui/button";
+import {
+    Dialog,
+    DialogClose,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useEffect, useRef, useState } from "react";
+import { taskService } from "@/api/taskService";
+import { useTaskStore } from "@/store/useTaskStore";
+import { ToastContainer, toast } from "react-toastify";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 const Home = () => {
     console.log("Home Run...");
@@ -13,7 +31,219 @@ const Home = () => {
         { date: "2025-07-03", status: "None", count: 0 },
     ];
 
+    const [taskContent, setTaskContent] = useState("");
+    const [noteContent, setNoteContent] = useState("");
+    const [open, setOpen] = useState(false);
+    const triggerRef = useRef();
+    const loaderRef = useRef();
+    const deleteIconRef = useRef();
+    const [loading, setLoading] = useState(false);
+    // for updated task content and note content
+
+    const [updatedTaskContent, setUpdatedTaskContent] = useState("");
+    const [updatedNoteContent, setUpdatedNoteContent] = useState("");
+
+    // for checkBox
+    const [isChecked, setIsChecked] = useState(false);
+
+    // for graph
+    const [completedTaskCount, setCompletedTaskCount] = useState(0);
+    const [unCompletedTaskCount, setUnCompletedTaskCount] = useState(0);
+
     const user = useAuthStore((state) => state.userData);
+    const addTaskState = useTaskStore((state) => state.addTaskState);
+    const tasks = useTaskStore((state) => state.tasks); // for display purpose
+
+    const getTaskStatusColor = (status) => {
+        const TaskStatusColor = {
+            Pending: "text-red-400",
+            Completed: "text-green-400",
+            Skipped: "text-gray-600",
+        };
+
+        return TaskStatusColor[status];
+    };
+
+    const getTaskPriorityColor = (priority) => {
+        const TaskPriorityColor = {
+            Low: "text-blue-400",
+            Medium: "text-yellow-400",
+            High: "text-cyan-400",
+        };
+
+        return TaskPriorityColor[priority];
+    };
+
+    useEffect(() => {
+        const completedTask = tasks.filter((task) => task.status === "Completed");
+        if (completedTask) setCompletedTaskCount(completedTask.length);
+        const unCompletedTask = tasks.filter((task) => task.status === "Pending");
+        if (unCompletedTask) setUnCompletedTaskCount(unCompletedTask.length);
+    }, [tasks]);
+
+    const handleTaskSubmit = async () => {
+        setLoading(true);
+        const taskData = {
+            content: taskContent,
+            dueDate: new Date().toISOString().split("T")[0],
+            note: noteContent,
+        };
+
+        try {
+            const response = await taskService.createTask(taskData);
+            if (response.data.success) {
+                const response = await taskService.getAllTasks(
+                    new Date().toISOString().split("T")[0]
+                );
+                if (response.data.success) {
+                    // set task state into store
+                    addTaskState(response.data.tasks);
+                }
+            }
+        } catch (error) {
+            toast.error(error.message, {
+                position: "bottom-right",
+                autoClose: 3000,
+                hideProgressBar: false,
+                closeOnClick: false,
+                pauseOnHover: true,
+                draggable: true,
+                progress: undefined,
+                theme: "dark",
+            });
+        } finally {
+            setLoading(false);
+            setOpen(false);
+        }
+    };
+
+    const handleTaskUpdate = async (taskId) => {
+        setLoading(true);
+        const taskData = {
+            content: updatedTaskContent,
+            dueDate: new Date().toISOString().split("T")[0],
+            note: updatedNoteContent,
+        };
+
+        try {
+            const response = await taskService.updateTask(taskData, taskId);
+            if (response.data.success) {
+                const response = await taskService.getAllTasks(
+                    new Date().toISOString().split("T")[0]
+                );
+                if (response.data.success) {
+                    // set task state into store
+                    addTaskState(response.data.tasks);
+                }
+
+                toast.success(response.data.message, {
+                    position: "bottom-right",
+                    autoClose: 3000,
+                    hideProgressBar: false,
+                    closeOnClick: false,
+                    pauseOnHover: true,
+                    draggable: true,
+                    progress: undefined,
+                    theme: "dark",
+                });
+            }
+        } catch (error) {
+            toast.error(error.message, {
+                position: "bottom-right",
+                autoClose: 3000,
+                hideProgressBar: false,
+                closeOnClick: false,
+                pauseOnHover: true,
+                draggable: true,
+                progress: undefined,
+                theme: "dark",
+            });
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleTaskDelete = async (taskId) => {
+        deleteIconRef.current.style.display = "none";
+        loaderRef.current.style.display = "block";
+
+        try {
+            const response = await taskService.deleteTask(taskId);
+            if (response.data.success) {
+                const response = await taskService.getAllTasks(
+                    new Date().toISOString().split("T")[0]
+                );
+                if (response.data.success) {
+                    // set task state into store
+                    addTaskState(response.data.tasks);
+                }
+
+                toast.success(response.data.message, {
+                    position: "bottom-right",
+                    autoClose: 3000,
+                    hideProgressBar: false,
+                    closeOnClick: false,
+                    pauseOnHover: true,
+                    draggable: true,
+                    progress: undefined,
+                    theme: "dark",
+                });
+            }
+        } catch (error) {
+            toast.error(error.message, {
+                position: "bottom-right",
+                autoClose: 3000,
+                hideProgressBar: false,
+                closeOnClick: false,
+                pauseOnHover: true,
+                draggable: true,
+                progress: undefined,
+                theme: "dark",
+            });
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleTaskCompletion = async (check, taskId) => {
+        setLoading(true);
+        try {
+            const response = await taskService.updateTaskStatus({ check }, taskId);
+            if (response.data.success) {
+                const response = await taskService.getAllTasks(
+                    new Date().toISOString().split("T")[0]
+                );
+                if (response.data.success) {
+                    // set task state into store
+                    addTaskState(response.data.tasks);
+                }
+
+                toast.success(response.data.message, {
+                    position: "bottom-right",
+                    autoClose: 3000,
+                    hideProgressBar: false,
+                    closeOnClick: false,
+                    pauseOnHover: true,
+                    draggable: true,
+                    progress: undefined,
+                    theme: "dark",
+                });
+            }
+        } catch (error) {
+            toast.error(error.message, {
+                position: "bottom-right",
+                autoClose: 3000,
+                hideProgressBar: false,
+                closeOnClick: false,
+                pauseOnHover: true,
+                draggable: true,
+                progress: undefined,
+                theme: "dark",
+            });
+        } finally {
+            setLoading(false);
+        }
+    };
 
     return (
         <div className="w-full text-gray-300 pb-10">
@@ -30,14 +260,64 @@ const Home = () => {
                     </label>
                     <div className="flex gap-7">
                         <input
+                            id="todo"
                             className="border-2 border-yellow-400 w-1/2 rounded-md py-2 px-5 outline-none font-medium tracking-wide"
                             type="text"
                             placeholder="Write your tasks..."
                         />
 
-                        <button className="bg-gray-300 px-6 py-2 text-black font-semibold rounded-md hover:bg-black hover:text-white transition-colors duration-500 cursor-pointer">
-                            Create
-                        </button>
+                        {/* for creating task popup  */}
+                        <Dialog open={open} onOpenChange={setOpen}>
+                            <form>
+                                <DialogTrigger asChild>
+                                    <button className="bg-gray-300 px-6 py-2 text-black font-semibold rounded-md hover:bg-black hover:text-white transition-colors duration-500 cursor-pointer">
+                                        Create
+                                    </button>
+                                </DialogTrigger>
+                                <DialogContent className="sm:max-w-[425px]">
+                                    <DialogHeader>
+                                        <DialogTitle>Create Task</DialogTitle>
+                                        <DialogDescription>
+                                            Plan your day like a pro — add your task and save it!
+                                        </DialogDescription>
+                                    </DialogHeader>
+                                    <div className="grid gap-4">
+                                        <div className="grid gap-3">
+                                            <Label htmlFor="task">Task</Label>
+                                            <Input
+                                                value={taskContent}
+                                                onChange={(e) => setTaskContent(e.target.value)}
+                                                id="task"
+                                                name="task"
+                                                placeholder="Write Here..."
+                                            />
+                                        </div>
+                                        <div className="grid gap-3">
+                                            <Label htmlFor="note">Note</Label>
+                                            <Input
+                                                value={noteContent}
+                                                onChange={(e) => setNoteContent(e.target.value)}
+                                                id="note"
+                                                name="note"
+                                                placeholder="Write notes here..."
+                                            />
+                                        </div>
+                                    </div>
+                                    <DialogFooter>
+                                        <DialogClose asChild>
+                                            <Button variant="outline">Cancel</Button>
+                                        </DialogClose>
+                                        <Button onClick={handleTaskSubmit} type="submit">
+                                            {loading ? (
+                                                <div className="loader"></div>
+                                            ) : (
+                                                <>Save changes</>
+                                            )}
+                                        </Button>
+                                    </DialogFooter>
+                                </DialogContent>
+                            </form>
+                        </Dialog>
                     </div>
                 </div>
                 <h3 className="font-semibold text-2xl ">Today's Tasks :</h3>
@@ -45,150 +325,191 @@ const Home = () => {
                 {/* task list  */}
                 <div className="flex">
                     <div className="w-1/2 h-92 pt-8 overflow-y-scroll scrollbar-hide flex flex-col gap-3 pr-5">
-                        <div className="flex justify-between bg-gray-900 items-center p-4 rounded-xl text-white">
-                            <div className="flex gap-5">
-                                <input type="checkbox" name="complete" id="complete" />
-                                <div>
-                                    Do Exercise Daily Lorem ipsum dolor sit amet consectetur
-                                    adipisicing elit. Eius, tenetur?
-                                </div>
-                            </div>
+                        {/* task render here  */}
+                        {tasks.length <= 0 ? (
+                            <h4 className="font-semibold mt-10 text-center">
+                                Not any Task Created
+                            </h4>
+                        ) : (
+                            <>
+                                {tasks.map((task) => (
+                                    <div
+                                        key={task?._id}
+                                        className="flex justify-between bg-gray-900 items-center p-4 rounded-xl text-white"
+                                    >
+                                        <div className="flex gap-5">
+                                            <input
+                                                className="cursor-pointer"
+                                                disabled={loading}
+                                                type="checkbox"
+                                                checked={task.status === "Completed"}
+                                                onChange={(e) => {
+                                                    setIsChecked(e.target.checked);
 
-                            <div className="flex gap-5">
-                                <FiEdit className="cursor-pointer" />
-                                <MdDelete className="cursor-pointer" />
-                            </div>
-                        </div>
-                        <div className="flex justify-between bg-gray-900 items-center p-4 rounded-xl text-white">
-                            <div className="flex gap-5">
-                                <input type="checkbox" name="complete" id="complete" />
-                                <div>
-                                    Do Exercise Daily Lorem ipsum dolor sit amet consectetur
-                                    adipisicing elit. Eius, tenetur?
-                                </div>
-                            </div>
+                                                    handleTaskCompletion(
+                                                        e.target.checked,
+                                                        task?._id
+                                                    );
+                                                }}
+                                            />
 
-                            <div className="flex gap-5">
-                                <FiEdit className="cursor-pointer" />
-                                <MdDelete className="cursor-pointer" />
-                            </div>
-                        </div>
-                        <div className="flex justify-between bg-gray-900 items-center p-4 rounded-xl text-white">
-                            <div className="flex gap-5">
-                                <input type="checkbox" name="complete" id="complete" />
-                                <div>
-                                    Do Exercise Daily Lorem ipsum dolor sit amet consectetur
-                                    adipisicing elit. Eius, tenetur?
-                                </div>
-                            </div>
+                                            <div className="flex flex-col gap-1">
+                                                <div className="flex gap-5">
+                                                    <Tooltip>
+                                                        <TooltipTrigger asChild>
+                                                            <div
+                                                                className={`${getTaskStatusColor(
+                                                                    task.status
+                                                                )} font-semibold cursor-pointer`}
+                                                            >
+                                                                {task.status}
+                                                            </div>
+                                                        </TooltipTrigger>
+                                                        <TooltipContent>
+                                                            <p>Status</p>
+                                                        </TooltipContent>
+                                                    </Tooltip>
 
-                            <div className="flex gap-5">
-                                <FiEdit className="cursor-pointer" />
-                                <MdDelete className="cursor-pointer" />
-                            </div>
-                        </div>
-                        <div className="flex justify-between bg-gray-900 items-center p-4 rounded-xl text-white">
-                            <div className="flex gap-5">
-                                <input type="checkbox" name="complete" id="complete" />
-                                <div>
-                                    Do Exercise Daily Lorem ipsum dolor sit amet consectetur
-                                    adipisicing elit. Eius, tenetur?
-                                </div>
-                            </div>
+                                                    <Tooltip>
+                                                        <TooltipTrigger asChild>
+                                                            <div
+                                                                className={`${getTaskPriorityColor(
+                                                                    task.priority
+                                                                )} font-semibold cursor-pointer`}
+                                                            >
+                                                                {task.priority}
+                                                            </div>
+                                                        </TooltipTrigger>
+                                                        <TooltipContent>
+                                                            <p>Priority</p>
+                                                        </TooltipContent>
+                                                    </Tooltip>
+                                                    <Tooltip>
+                                                        <TooltipTrigger asChild>
+                                                            <div
+                                                                className={
+                                                                    "font-semibold cursor-pointer text-orange-500"
+                                                                }
+                                                            >
+                                                                Note
+                                                            </div>
+                                                        </TooltipTrigger>
+                                                        <TooltipContent>
+                                                            <p>{task?.note || "Empty"}</p>
+                                                        </TooltipContent>
+                                                    </Tooltip>
+                                                </div>
+                                                <div>{task.content}</div>
+                                            </div>
+                                        </div>
 
-                            <div className="flex gap-5">
-                                <FiEdit className="cursor-pointer" />
-                                <MdDelete className="cursor-pointer" />
-                            </div>
-                        </div>
-                        <div className="flex justify-between bg-gray-900 items-center p-4 rounded-xl text-white">
-                            <div className="flex gap-5">
-                                <input type="checkbox" name="complete" id="complete" />
-                                <div>
-                                    Do Exercise Daily Lorem ipsum dolor sit amet consectetur
-                                    adipisicing elit. Eius, tenetur?
-                                </div>
-                            </div>
+                                        <div className="flex gap-3">
+                                            {/* popUp for updating the task  */}
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    console.log(task.content, task.note);
+                                                    setUpdatedTaskContent(task?.content || "");
+                                                    setUpdatedNoteContent(task?.note || "");
 
-                            <div className="flex gap-5">
-                                <FiEdit className="cursor-pointer" />
-                                <MdDelete className="cursor-pointer" />
-                            </div>
-                        </div>
-                        <div className="flex justify-between bg-gray-900 items-center p-4 rounded-xl text-white">
-                            <div className="flex gap-5">
-                                <input type="checkbox" name="complete" id="complete" />
-                                <div>
-                                    Do Exercise Daily Lorem ipsum dolor sit amet consectetur
-                                    adipisicing elit. Eius, tenetur?
-                                </div>
-                            </div>
+                                                    // Open dialog after state is set
+                                                    requestAnimationFrame(() => {
+                                                        triggerRef.current?.click();
+                                                    });
+                                                }}
+                                            >
+                                                <FiEdit className="cursor-pointer" />
+                                            </button>
+                                            <Dialog>
+                                                <form>
+                                                    <DialogTrigger asChild>
+                                                        <button
+                                                            ref={triggerRef}
+                                                            type="button"
+                                                            style={{ display: "none" }}
+                                                            aria-hidden="true"
+                                                        />
+                                                    </DialogTrigger>
+                                                    <DialogContent className="sm:max-w-[425px]">
+                                                        <DialogHeader>
+                                                            <DialogTitle>Edit Task</DialogTitle>
+                                                            <DialogDescription>
+                                                                Plan your day like a pro — Edit your
+                                                                task and save it!
+                                                            </DialogDescription>
+                                                        </DialogHeader>
+                                                        <div className="grid gap-4">
+                                                            <div className="grid gap-3">
+                                                                <Label htmlFor="task">Task</Label>
+                                                                <Input
+                                                                    value={updatedTaskContent}
+                                                                    onChange={(e) =>
+                                                                        setUpdatedTaskContent(
+                                                                            e.target.value
+                                                                        )
+                                                                    }
+                                                                    id="task"
+                                                                    name="task"
+                                                                    placeholder="Write Here..."
+                                                                />
+                                                            </div>
+                                                            <div className="grid gap-3">
+                                                                <Label htmlFor="note">Note</Label>
+                                                                <Input
+                                                                    value={updatedNoteContent}
+                                                                    onChange={(e) =>
+                                                                        setUpdatedNoteContent(
+                                                                            e.target.value
+                                                                        )
+                                                                    }
+                                                                    id="note"
+                                                                    name="note"
+                                                                    placeholder="Write notes here..."
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                        <DialogFooter>
+                                                            <DialogClose asChild>
+                                                                <Button variant="outline">
+                                                                    Cancel
+                                                                </Button>
+                                                            </DialogClose>
+                                                            <Button
+                                                                onClick={() =>
+                                                                    handleTaskUpdate(task?._id)
+                                                                }
+                                                                type="button"
+                                                            >
+                                                                {loading ? (
+                                                                    <div className="loader"></div>
+                                                                ) : (
+                                                                    <>Save changes</>
+                                                                )}
+                                                            </Button>
+                                                        </DialogFooter>
+                                                    </DialogContent>
+                                                </form>
+                                            </Dialog>
 
-                            <div className="flex gap-5">
-                                <FiEdit className="cursor-pointer" />
-                                <MdDelete className="cursor-pointer" />
-                            </div>
-                        </div>
-                        <div className="flex justify-between bg-gray-900 items-center p-4 rounded-xl text-white">
-                            <div className="flex gap-5">
-                                <input type="checkbox" name="complete" id="complete" />
-                                <div>
-                                    Do Exercise Daily Lorem ipsum dolor sit amet consectetur
-                                    adipisicing elit. Eius, tenetur?
-                                </div>
-                            </div>
-
-                            <div className="flex gap-5">
-                                <FiEdit className="cursor-pointer" />
-                                <MdDelete className="cursor-pointer" />
-                            </div>
-                        </div>
-                        <div className="flex justify-between bg-gray-900 items-center p-4 rounded-xl text-white">
-                            <div className="flex gap-5">
-                                <input type="checkbox" name="complete" id="complete" />
-                                <div>
-                                    Do Exercise Daily Lorem ipsum dolor sit amet consectetur
-                                    adipisicing elit. Eius, tenetur?
-                                </div>
-                            </div>
-
-                            <div className="flex gap-5">
-                                <FiEdit className="cursor-pointer" />
-                                <MdDelete className="cursor-pointer" />
-                            </div>
-                        </div>
-                        <div className="flex justify-between bg-gray-900 items-center p-4 rounded-xl text-white">
-                            <div className="flex gap-5">
-                                <input type="checkbox" name="complete" id="complete" />
-                                <div>
-                                    Do Exercise Daily Lorem ipsum dolor sit amet consectetur
-                                    adipisicing elit. Eius, tenetur?
-                                </div>
-                            </div>
-
-                            <div className="flex gap-5">
-                                <FiEdit className="cursor-pointer" />
-                                <MdDelete className="cursor-pointer" />
-                            </div>
-                        </div>
-                        <div className="flex justify-between bg-gray-900 items-center p-4 rounded-xl text-white">
-                            <div className="flex gap-5">
-                                <input type="checkbox" name="complete" id="complete" />
-                                <div>
-                                    Do Exercise Daily Lorem ipsum dolor sit amet consectetur
-                                    adipisicing elit. Eius, tenetur?
-                                </div>
-                            </div>
-
-                            <div className="flex gap-5">
-                                <FiEdit className="cursor-pointer" />
-                                <MdDelete className="cursor-pointer" />
-                            </div>
-                        </div>
+                                            <div ref={deleteIconRef}>
+                                                <MdDelete
+                                                    onClick={() => handleTaskDelete(task?._id)}
+                                                    className="cursor-pointer"
+                                                />
+                                            </div>
+                                            <div className="loader hidden" ref={loaderRef}></div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </>
+                        )}
                     </div>
 
                     <div className="w-1/2 h-92 pb-10 flex items-center justify-center cursor-pointer gap-14">
-                        <Chart labels={["Completed", "Uncompleted"]} counts={[80, 20]} />
+                        <Chart
+                            labels={["Completed", "Uncompleted"]}
+                            counts={[completedTaskCount, unCompletedTaskCount]}
+                        />
 
                         <div className="flex flex-col gap-5 items-start">
                             <h4 className="flex gap-1 items-center justify-center  font-semibold">
@@ -209,6 +530,19 @@ const Home = () => {
                 </h3>
                 <StreakHeatmap data={sampleData} />
             </div>
+
+            <ToastContainer
+                position="bottom-right"
+                autoClose={3000}
+                hideProgressBar={false}
+                newestOnTop
+                closeOnClick={false}
+                rtl={false}
+                pauseOnFocusLoss
+                draggable
+                pauseOnHover
+                theme="dark"
+            />
         </div>
     );
 };

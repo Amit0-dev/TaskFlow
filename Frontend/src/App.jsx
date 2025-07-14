@@ -10,15 +10,24 @@ import Protected from "./customComponents/Protected.jsx";
 import useAuthStore from "./store/useAuthStore.js";
 import { useEffect } from "react";
 import PublicRoute from "./customComponents/PublicRoute.jsx";
+import { useTaskStore } from "./store/useTaskStore.js";
 
 function App() {
     console.log("App Run...");
 
     const checkAuth = useAuthStore((state) => state.checkAuth);
     const loading = useAuthStore((state) => state.loading);
+    const fetchTaskAndUpdateState = useTaskStore((state) => state.fetchTaskAndUpdateState);
 
     useEffect(() => {
-        checkAuth();
+        const init = async () => {
+            await checkAuth();
+            if (useAuthStore.getState().isLoggedIn) {
+                fetchTaskAndUpdateState();
+            }
+        };
+
+        init()
     }, []);
 
     if (loading)
