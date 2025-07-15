@@ -13,6 +13,6 @@ router.post("/c", isAuthenticated, createElement);
 router.post("/u/:elemId", isAuthenticated, updateElement);
 router.post("/d/:elemId", isAuthenticated, deleteElement);
 
-router.get("/", isAuthenticated, getElementsByTagId);
+router.get("/:tagId", isAuthenticated, getElementsByTagId);
 
 export default router;

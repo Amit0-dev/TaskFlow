@@ -122,7 +122,7 @@ const deleteElement = async (req, res) => {
 const getElementsByTagId = async (req, res) => {
     // filter element based on tagId and userId ( currently loggedIn User )
 
-    const { tagId } = req.body;
+    const { tagId } = req.params;
 
     if (!tagId) {
         return res.status(400).json({
