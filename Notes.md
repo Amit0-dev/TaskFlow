@@ -84,3 +84,14 @@ const todayStr = new Date().toLocaleDateString("en-CA", {
 
 // Works even on UTC-hosted servers (thanks to timeZone setting)
 ```
+
+### useSearchParams (React hook)
+
+- It is extract query from url
+
+```javascript
+ navigate(`/keep/${tag?._id}?name=${tag?.tagName}`)
+
+const [searchParams] = useSearchParams();
+const tagName = searchParams.get("name");
+```
