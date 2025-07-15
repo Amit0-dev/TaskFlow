@@ -1,9 +1,9 @@
 import { Task } from "../models/task.model.js";
 
 const createTask = async (req, res) => {
-    const { content, dueDate, note } = req.body;
+    const { content, dueDate, note, taskCreatedDate } = req.body;
 
-    if ((!content, !dueDate)) {
+    if (!content || !dueDate || !taskCreatedDate) {
         return res.status(400).json({
             message: "All fields are required",
         });
@@ -15,6 +15,7 @@ const createTask = async (req, res) => {
             dueDate,
             note: note ? note : "",
             owner: req.user?._id,
+            taskCreatedDate,
         });
 
         if (!task) {
@@ -37,7 +38,7 @@ const createTask = async (req, res) => {
     }
 };
 const updateTask = async (req, res) => {
-    const { content, dueDate, note } = req.body;
+    const { content, dueDate, note, taskCreatedDate } = req.body;
 
     const { taskId } = req.params;
 
@@ -47,7 +48,7 @@ const updateTask = async (req, res) => {
         });
     }
 
-    if ((!content, !dueDate)) {
+    if (!content || !dueDate || !taskCreatedDate) {
         return res.status(400).json({
             message: "All fields are required",
         });
@@ -62,6 +63,7 @@ const updateTask = async (req, res) => {
                     dueDate,
                     note: note ? note : "",
                     owner: req.user?._id,
+                    taskCreatedDate,
                 },
             },
             { new: true }
@@ -118,11 +120,12 @@ const deleteTask = async (req, res) => {
     }
 };
 const getAllTask = async (req, res) => {
-    // http://localhost:8080/api/v1/task/tasks?date=10-07-2025 -> TODO (form of date)
+    // http://localhost:8080/api/v1/task/tasks?date=2025-07-15
 
     const { date } = req.query;
 
     const start = new Date(date);
+    start.setUTCHours(0, 0, 0, 0); // ✅ 12:00 AM UTC
     const end = new Date(date);
     end.setUTCHours(23, 59, 59, 999);
 
@@ -135,7 +138,7 @@ const getAllTask = async (req, res) => {
     try {
         const tasks = await Task.find({
             owner: req.user?._id,
-            createdAt: {
+            taskCreatedDate: {
                 $gte: start,
                 $lte: end,
             },
@@ -156,6 +159,7 @@ const getAllTask = async (req, res) => {
     }
 };
 
+// for daily streaks handling
 const getYesterdayTasksForStreak = async (req, res) => {
     const { date } = req.body;
 
@@ -195,7 +199,6 @@ const getYesterdayTasksForStreak = async (req, res) => {
 
 // TODO
 /*
-1. make route for update status of task
 2. make route for update priority of task
 
 */
@@ -253,4 +256,11 @@ const updateTaskStatus = async (req, res) => {
     }
 };
 
-export { createTask, updateTask, deleteTask, getAllTask, getYesterdayTasksForStreak, updateTaskStatus };
+export {
+    createTask,
+    updateTask,
+    deleteTask,
+    getAllTask,
+    getYesterdayTasksForStreak,
+    updateTaskStatus,
+};

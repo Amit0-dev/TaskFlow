@@ -18,7 +18,6 @@ import { ToastContainer, toast } from "react-toastify";
 import useAuthStore from "@/store/useAuthStore.js";
 
 const Login = () => {
-    console.log("Login Run...")
     const [formData, setFormData] = useState({
         email: "",
         password: "",
@@ -39,13 +38,13 @@ const Login = () => {
         try {
             const response = await authService.login(formData);
             if (response.data.success) {
-                console.log(`After loggedIn : ${response.user}`);
+
                 loginState(response.data?.user);
 
                 navigate("/home")
             }
         } catch (error) {
-            console.log("Inside Login.jsx : ", error);
+
             toast.error(error.message, {
                 position: "bottom-right",
                 autoClose: 3000,

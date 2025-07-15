@@ -36,18 +36,12 @@ const register = async (req, res) => {
             });
         }
 
-        console.log({ user });
-
         const token = crypto.randomBytes(32).toString("hex");
-
-        console.log({ token });
 
         if (token) {
             user.verificationToken = token;
 
             await user.save();
-
-            console.log({ user });
         }
 
         // send token into mail
@@ -164,14 +158,17 @@ const logout = async (req, res) => {
     });
 };
 const getMe = async (req, res) => {
-    const today = dayjs().startOf("day").toDate(); // Gives 2025-07-13T00:00:00.000Z
+     const todayStr = new Date().toLocaleDateString("en-CA", {
+        timeZone: "Asia/Kolkata",
+    });
 
     try {
+        // TODO : Remove unneccessary db call
         await Task.updateMany(
             {
                 owner: req.user?._id,
                 dueDate: {
-                    $lte: today,
+                    $lt: todayStr,
                 },
                 status: "Pending",
             },

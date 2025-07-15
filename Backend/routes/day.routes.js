@@ -11,7 +11,7 @@ import {
 const router = express.Router();
 
 router.post("/c-day", isAuthenticated, createDay);
-router.post("/u-day/:dayDocsId", isAuthenticated, updateDay);
+router.post("/u-day", isAuthenticated, updateDay);
 router.post("/finalize-status", isAuthenticated, finalizeStatus)
 
 router.get("/doc", isAuthenticated, getDayDocsBySpecificDate)

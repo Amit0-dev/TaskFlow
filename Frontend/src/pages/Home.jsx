@@ -22,21 +22,17 @@ import { taskService } from "@/api/taskService";
 import { useTaskStore } from "@/store/useTaskStore";
 import { ToastContainer, toast } from "react-toastify";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { dayService } from "@/api/dayService";
+import { useDayStore } from "../store/useDayStore.js";
 
 const Home = () => {
-    console.log("Home Run...");
-    const sampleData = [
-        { date: "2025-07-01", status: "Completed", count: 5 },
-        { date: "2025-07-02", status: "Partial", count: 2 },
-        { date: "2025-07-03", status: "None", count: 0 },
-    ];
+    const [graphDayStreakData, setGraphDayStreakData] = useState([]);
 
     const [taskContent, setTaskContent] = useState("");
     const [noteContent, setNoteContent] = useState("");
     const [open, setOpen] = useState(false);
     const triggerRef = useRef();
-    const loaderRef = useRef();
-    const deleteIconRef = useRef();
+
     const [loading, setLoading] = useState(false);
     // for updated task content and note content
 
@@ -46,6 +42,10 @@ const Home = () => {
     // for checkBox
     const [isChecked, setIsChecked] = useState(false);
 
+    // for deleteBtn Animation
+
+    const [taskClicked, setTaskClicked] = useState(null);
+
     // for graph
     const [completedTaskCount, setCompletedTaskCount] = useState(0);
     const [unCompletedTaskCount, setUnCompletedTaskCount] = useState(0);
@@ -53,6 +53,8 @@ const Home = () => {
     const user = useAuthStore((state) => state.userData);
     const addTaskState = useTaskStore((state) => state.addTaskState);
     const tasks = useTaskStore((state) => state.tasks); // for display purpose
+
+    const days = useDayStore((state) => state.days); // for github like graph
 
     const getTaskStatusColor = (status) => {
         const TaskStatusColor = {
@@ -81,22 +83,60 @@ const Home = () => {
         if (unCompletedTask) setUnCompletedTaskCount(unCompletedTask.length);
     }, [tasks]);
 
+    useEffect(() => {
+        const finalizedDays = days.filter((day) => day.statusFinalized === true);
+
+        const graphData = finalizedDays.map((day) => ({
+            date: day.date,
+            status: day.status,
+            count: day.completedTasks,
+        }));
+
+        // set into localState
+        setGraphDayStreakData(graphData);
+    }, [days]);
+
+    // const sampleData = [
+    //     { date: "2025-07-01", status: "Completed", count: 5 },
+    //     { date: "2025-07-02", status: "Partial", count: 2 },
+    //     { date: "2025-07-03", status: "None", count: 0 },
+    // ];
+
     const handleTaskSubmit = async () => {
         setLoading(true);
         const taskData = {
             content: taskContent,
-            dueDate: new Date().toISOString().split("T")[0],
+            dueDate: new Date().toLocaleDateString("en-CA"),
             note: noteContent,
+            taskCreatedDate: new Date().toLocaleDateString("en-CA"),
         };
 
         try {
             const response = await taskService.createTask(taskData);
             if (response.data.success) {
                 const response = await taskService.getAllTasks(
-                    new Date().toISOString().split("T")[0]
+                    new Date().toLocaleDateString("en-CA")
                 );
                 if (response.data.success) {
                     // set task state into store
+
+                    const dayCreatedDate = localStorage.getItem("dayCreatedDate");
+                    const todayDate = new Date().toLocaleDateString("en-CA");
+
+                    if (todayDate != dayCreatedDate) {
+                        const dayData = {
+                            date: new Date().toLocaleDateString("en-CA"),
+                            totalTasks: response.data.tasks.length,
+                            completedTasks: response.data.tasks.filter(
+                                (task) => task.status === "Completed"
+                            ).length,
+                        };
+
+                        await dayService.createDay(dayData);
+
+                        localStorage.setItem("dayCreatedDate", todayDate);
+                    }
+
                     addTaskState(response.data.tasks);
                 }
             }
@@ -121,15 +161,16 @@ const Home = () => {
         setLoading(true);
         const taskData = {
             content: updatedTaskContent,
-            dueDate: new Date().toISOString().split("T")[0],
+            dueDate: new Date().toLocaleDateString("en-CA"),
             note: updatedNoteContent,
+            taskCreatedDate: new Date().toLocaleDateString("en-CA"),
         };
 
         try {
             const response = await taskService.updateTask(taskData, taskId);
             if (response.data.success) {
                 const response = await taskService.getAllTasks(
-                    new Date().toISOString().split("T")[0]
+                    new Date().toLocaleDateString("en-CA")
                 );
                 if (response.data.success) {
                     // set task state into store
@@ -164,17 +205,26 @@ const Home = () => {
     };
 
     const handleTaskDelete = async (taskId) => {
-        deleteIconRef.current.style.display = "none";
-        loaderRef.current.style.display = "block";
-
+        setTaskClicked(taskId);
         try {
             const response = await taskService.deleteTask(taskId);
             if (response.data.success) {
                 const response = await taskService.getAllTasks(
-                    new Date().toISOString().split("T")[0]
+                    new Date().toLocaleDateString("en-CA")
                 );
                 if (response.data.success) {
                     // set task state into store
+
+                    const dayData = {
+                        date: new Date().toLocaleDateString("en-CA"),
+                        totalTasks: response.data.tasks.length,
+                        completedTasks: response.data.tasks.filter(
+                            (task) => task.status === "Completed"
+                        ).length,
+                    };
+
+                    await dayService.updateDay(dayData);
+
                     addTaskState(response.data.tasks);
                 }
 
@@ -200,8 +250,6 @@ const Home = () => {
                 progress: undefined,
                 theme: "dark",
             });
-        } finally {
-            setLoading(false);
         }
     };
 
@@ -211,10 +259,21 @@ const Home = () => {
             const response = await taskService.updateTaskStatus({ check }, taskId);
             if (response.data.success) {
                 const response = await taskService.getAllTasks(
-                    new Date().toISOString().split("T")[0]
+                    new Date().toLocaleDateString("en-CA")
                 );
                 if (response.data.success) {
                     // set task state into store
+
+                    const dayData = {
+                        date: new Date().toLocaleDateString("en-CA"),
+                        totalTasks: response.data.tasks.length,
+                        completedTasks: response.data.tasks.filter(
+                            (task) => task.status === "Completed"
+                        ).length,
+                    };
+
+                    await dayService.updateDay(dayData);
+
                     addTaskState(response.data.tasks);
                 }
 
@@ -254,71 +313,59 @@ const Home = () => {
             </div>
 
             <div className="w-full ">
-                <div className="flex flex-col gap-1 mb-5">
-                    <label className="font-semibold" htmlFor="todo">
-                        Todo :
-                    </label>
-                    <div className="flex gap-7">
-                        <input
-                            id="todo"
-                            className="border-2 border-yellow-400 w-1/2 rounded-md py-2 px-5 outline-none font-medium tracking-wide"
-                            type="text"
-                            placeholder="Write your tasks..."
-                        />
-
-                        {/* for creating task popup  */}
-                        <Dialog open={open} onOpenChange={setOpen}>
-                            <form>
-                                <DialogTrigger asChild>
-                                    <button className="bg-gray-300 px-6 py-2 text-black font-semibold rounded-md hover:bg-black hover:text-white transition-colors duration-500 cursor-pointer">
-                                        Create
-                                    </button>
-                                </DialogTrigger>
-                                <DialogContent className="sm:max-w-[425px]">
-                                    <DialogHeader>
-                                        <DialogTitle>Create Task</DialogTitle>
-                                        <DialogDescription>
-                                            Plan your day like a pro — add your task and save it!
-                                        </DialogDescription>
-                                    </DialogHeader>
-                                    <div className="grid gap-4">
-                                        <div className="grid gap-3">
-                                            <Label htmlFor="task">Task</Label>
-                                            <Input
-                                                value={taskContent}
-                                                onChange={(e) => setTaskContent(e.target.value)}
-                                                id="task"
-                                                name="task"
-                                                placeholder="Write Here..."
-                                            />
-                                        </div>
-                                        <div className="grid gap-3">
-                                            <Label htmlFor="note">Note</Label>
-                                            <Input
-                                                value={noteContent}
-                                                onChange={(e) => setNoteContent(e.target.value)}
-                                                id="note"
-                                                name="note"
-                                                placeholder="Write notes here..."
-                                            />
-                                        </div>
+                {/* In future add terminal based task addition  */}
+                <div className="w-full mb-5 ">
+                    <Dialog open={open} onOpenChange={setOpen}>
+                        <form>
+                            <DialogTrigger asChild>
+                                <button className="bg-gray-300 px-8 py-2 text-black font-semibold rounded-md hover:bg-black hover:text-white transition-colors duration-500 cursor-pointer">
+                                    Create Task
+                                </button>
+                            </DialogTrigger>
+                            <DialogContent className="sm:max-w-[425px]">
+                                <DialogHeader>
+                                    <DialogTitle>Create Task</DialogTitle>
+                                    <DialogDescription>
+                                        Plan your day like a pro — add your task and save it!
+                                    </DialogDescription>
+                                </DialogHeader>
+                                <div className="grid gap-4">
+                                    <div className="grid gap-3">
+                                        <Label htmlFor="task">Task</Label>
+                                        <Input
+                                            value={taskContent}
+                                            onChange={(e) => setTaskContent(e.target.value)}
+                                            id="task"
+                                            name="task"
+                                            placeholder="Write Here..."
+                                        />
                                     </div>
-                                    <DialogFooter>
-                                        <DialogClose asChild>
-                                            <Button variant="outline">Cancel</Button>
-                                        </DialogClose>
-                                        <Button onClick={handleTaskSubmit} type="submit">
-                                            {loading ? (
-                                                <div className="loader"></div>
-                                            ) : (
-                                                <>Save changes</>
-                                            )}
-                                        </Button>
-                                    </DialogFooter>
-                                </DialogContent>
-                            </form>
-                        </Dialog>
-                    </div>
+                                    <div className="grid gap-3">
+                                        <Label htmlFor="note">Note</Label>
+                                        <Input
+                                            value={noteContent}
+                                            onChange={(e) => setNoteContent(e.target.value)}
+                                            id="note"
+                                            name="note"
+                                            placeholder="Write notes here..."
+                                        />
+                                    </div>
+                                </div>
+                                <DialogFooter>
+                                    <DialogClose asChild>
+                                        <Button variant="outline">Cancel</Button>
+                                    </DialogClose>
+                                    <Button onClick={handleTaskSubmit} type="submit">
+                                        {loading ? (
+                                            <div className="loader"></div>
+                                        ) : (
+                                            <>Save changes</>
+                                        )}
+                                    </Button>
+                                </DialogFooter>
+                            </DialogContent>
+                        </form>
+                    </Dialog>
                 </div>
                 <h3 className="font-semibold text-2xl ">Today's Tasks :</h3>
 
@@ -408,7 +455,6 @@ const Home = () => {
                                             <button
                                                 type="button"
                                                 onClick={() => {
-                                                    console.log(task.content, task.note);
                                                     setUpdatedTaskContent(task?.content || "");
                                                     setUpdatedNoteContent(task?.note || "");
 
@@ -491,13 +537,14 @@ const Home = () => {
                                                 </form>
                                             </Dialog>
 
-                                            <div ref={deleteIconRef}>
+                                            {task?._id === taskClicked ? (
+                                                <div className="loader"></div>
+                                            ) : (
                                                 <MdDelete
                                                     onClick={() => handleTaskDelete(task?._id)}
                                                     className="cursor-pointer"
                                                 />
-                                            </div>
-                                            <div className="loader hidden" ref={loaderRef}></div>
+                                            )}
                                         </div>
                                     </div>
                                 ))}
@@ -528,7 +575,8 @@ const Home = () => {
                 <h3 className="text-center text-3xl font-semibold mb-5 capitalize">
                     Your Past 6 Months of Activity
                 </h3>
-                <StreakHeatmap data={sampleData} />
+
+                <StreakHeatmap data={graphDayStreakData} />
             </div>
 
             <ToastContainer

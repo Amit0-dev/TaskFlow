@@ -11,23 +11,65 @@ import useAuthStore from "./store/useAuthStore.js";
 import { useEffect } from "react";
 import PublicRoute from "./customComponents/PublicRoute.jsx";
 import { useTaskStore } from "./store/useTaskStore.js";
+import { dayService } from "./api/dayService.js";
+import { useDayStore } from "./store/useDayStore.js";
 
 function App() {
-    console.log("App Run...");
-
     const checkAuth = useAuthStore((state) => state.checkAuth);
     const loading = useAuthStore((state) => state.loading);
     const fetchTaskAndUpdateState = useTaskStore((state) => state.fetchTaskAndUpdateState);
+
+    const setDays = useDayStore((state) => state.setDays);
 
     useEffect(() => {
         const init = async () => {
             await checkAuth();
             if (useAuthStore.getState().isLoggedIn) {
-                fetchTaskAndUpdateState();
+                await fetchTaskAndUpdateState();
+
+                // for graph
+                const lastSyncDate = localStorage.getItem("lastSyncDate");
+
+                const todayDate = new Date().toLocaleDateString("en-CA"); // "YYYY-MM-DD"
+
+                if (lastSyncDate !== todayDate) {
+                    try {
+                        const today = new Date();
+                        const yesterday = new Date(today);
+                        yesterday.setDate(today.getDate() - 1);
+                        const formatted = yesterday.toLocaleDateString("en-CA"); // ✅ Local "YYYY-MM-DD"
+
+                        const response = await dayService.getDayDocsBySpecificDate(formatted);
+
+                        const completedTask = response.data.dayDocs[0]?.completedTasks;
+
+                        // partial - atleast one task complete
+                        // complete - all task completed
+                        // none - no any task completed
+                        let status = "None";
+                        if (
+                            completedTask === response.data.dayDocs[0]?.totalTasks &&
+                            response.data.dayDocs[0]?.totalTasks > 0
+                        ) {
+                            status = "Completed";
+                        } else if (completedTask > 0) {
+                            status = "Partial";
+                        }
+
+                        if (status && completedTask !== undefined) {
+                            await dayService.finalizeStatus({ date: formatted, status });
+                            localStorage.setItem("lastSyncDate", todayDate); // ✅ important
+                        }
+                    } catch (error) {
+                        console.error("Error syncing day status:", error);
+                    }
+                }
             }
+
+            await setDays();
         };
 
-        init()
+        init();
     }, []);
 
     if (loading)

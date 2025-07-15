@@ -26,6 +26,7 @@ export const taskService = {
         }
     },
     getAllTasks: async (date) => {
+
         try {
             const response = await axiosInstance.get(`/task/tasks?date=${date}`);
             return response;
@@ -33,7 +34,7 @@ export const taskService = {
             throw error?.response?.data || error;
         }
     },
-    getYesterdayTasksForStreak: async (date) => {
+    getYesterdayTasksForStreak: async (date) => { // Unused (till now not using anywhere)
         try {
             const response = await axiosInstance.get("/task/tasks/old", date);
             return response;

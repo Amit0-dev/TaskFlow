@@ -8,8 +8,10 @@ export const useTaskStore = create((set) => ({
     },
 
     fetchTaskAndUpdateState: async () => {
+
         try {
-            const response = await taskService.getAllTasks(new Date().toISOString().split("T")[0]);
+            const response = await taskService.getAllTasks(new Date().toLocaleDateString("en-CA"));
+
             if (response.data.success) {
                 // set task state into store
                 const taskList = response.data.tasks || [];

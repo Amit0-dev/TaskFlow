@@ -17,7 +17,7 @@ import { NavLink, useNavigate } from "react-router-dom";
 import { ToastContainer, toast } from "react-toastify";
 
 const Signup = () => {
-    console.log("Signup Run...")
+
     const [formData, setFormData] = useState({
         name: "",
         email: "",

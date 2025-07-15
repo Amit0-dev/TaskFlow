@@ -3,7 +3,7 @@ import { Day } from "../models/day.model.js";
 const createDay = async (req, res) => {
     const { date, totalTasks, completedTasks } = req.body;
 
-    if (!date || !totalTasks || !completedTasks) {
+    if (!date || isNaN(totalTasks) || isNaN(completedTasks)) {
         return res.status(400).json({
             message:
                 "Missing required fields. Ensure 'date', 'totalTasks', and 'completedTasks' are included.",
@@ -11,6 +11,14 @@ const createDay = async (req, res) => {
     }
 
     try {
+        const existingDayDocs = await Day.findOne({ date: date });
+
+        if (existingDayDocs) {
+            return res.status(400).json({
+                message: "Day already created",
+            });
+        }
+
         const dayDocs = await Day.create({
             userId: req.user?._id,
             date,
@@ -40,9 +48,7 @@ const createDay = async (req, res) => {
 const updateDay = async (req, res) => {
     const { date, totalTasks, completedTasks } = req.body;
 
-    const { dayDocsId } = req.parama;
-
-    if (!date || !totalTasks || !completedTasks) {
+    if (!date || isNaN(totalTasks) || isNaN(completedTasks)) {
         return res.status(400).json({
             message:
                 "Missing required fields. Ensure 'date', 'totalTasks', and 'completedTasks' are included.",
@@ -50,8 +56,16 @@ const updateDay = async (req, res) => {
     }
 
     try {
+        const dayDocs = await Day.findOne({ date: date });
+
+        if (!dayDocs) {
+            return res.status(400).json({
+                message: "Day record not found",
+            });
+        }
+
         const updatedDayDocs = await Day.findByIdAndUpdate(
-            dayDocsId,
+            dayDocs?._id,
             {
                 $set: {
                     userId: req.user?._id,
@@ -86,11 +100,15 @@ const updateDay = async (req, res) => {
 const getAllPastDayDocs = async (req, res) => {
     // Past 180 Days
 
-    const todayStr = new Date().toISOString().split("T")[0];
+    const todayStr = new Date().toLocaleDateString("en-CA", {
+        timeZone: "Asia/Kolkata",
+    });
 
-    const dayAgo180Str = new Date(Date.now() - 180 * 24 * 60 * 60 * 1000)
-        .toISOString()
-        .split("T")[0];
+    const dayAgo180 = new Date();
+    dayAgo180.setDate(dayAgo180.getDate() - 180);
+    const dayAgo180Str = dayAgo180.toLocaleDateString("en-CA", {
+        timeZone: "Asia/Kolkata",
+    });
 
     try {
         const dayDocs = await Day.find({
@@ -153,7 +171,52 @@ const getDayDocsBySpecificDate = async (req, res) => {
 // logic: read tasks for yesterday, compute status, update Day doc
 
 const finalizeStatus = async (req, res) => {
-    // TODO
+    const { date, status } = req.body;
+
+    if (!date || !status) {
+        return res.status(400).json({
+            message: "Missing required fields - date , status",
+        });
+    }
+
+    try {
+        const dayDocs = await Day.findOne({ date: date });
+
+        if (!dayDocs) {
+            return res.status(400).json({
+                message: "Day record not found",
+            });
+        }
+
+        const updatedDayDocs = await Day.findByIdAndUpdate(
+            dayDocs._id,
+            {
+                $set: {
+                    status: status,
+                    statusFinalized: true,
+                },
+            },
+            { new: true }
+        );
+
+        if (!updatedDayDocs) {
+            return res.status(400).json({
+                message: "Day record not updated - Please try again",
+            });
+        }
+
+        return res.status(200).json({
+            message: "Day record is updated successfully",
+            success: true,
+            updatedDayDocs,
+        });
+    } catch (error) {
+        return res.status(400).json({
+            message: "Day record doesn't updated successfully",
+            success: true,
+            error,
+        });
+    }
 };
 
 export { createDay, updateDay, finalizeStatus, getDayDocsBySpecificDate, getAllPastDayDocs };
