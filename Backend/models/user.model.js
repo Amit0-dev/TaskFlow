@@ -21,6 +21,9 @@ const userSchema = new mongoose.Schema(
         verificationToken: {
             type: String,
         },
+        profile: {
+            type: String,
+        },
         streak: {
             current: {
                 type: Number,

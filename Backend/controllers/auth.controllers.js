@@ -5,6 +5,7 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import dayjs from "dayjs";
 import { Task } from "../models/task.model.js";
+import { uploadOnCloudinary, deleteMediaOnCloudinary, getPublicId } from "../utils/cloudinary.js";
 
 const register = async (req, res) => {
     const { name, email, password } = req.body;
@@ -158,7 +159,7 @@ const logout = async (req, res) => {
     });
 };
 const getMe = async (req, res) => {
-     const todayStr = new Date().toLocaleDateString("en-CA", {
+    const todayStr = new Date().toLocaleDateString("en-CA", {
         timeZone: "Asia/Kolkata",
     });
 
@@ -267,5 +268,88 @@ const verifyEmail = async (req, res) => {
         });
     }
 };
+const uploadProfile = async (req, res) => {
+    try {
+        const localFilePath = req.file?.path;
 
-export { register, login, logout, getMe, changePassword, verifyEmail };
+        if (!localFilePath) {
+            return res.status(400).json({
+                message: "File is missing",
+            });
+        }
+
+        const image = await uploadOnCloudinary(localFilePath);
+
+        if (!image) {
+            return res.status(400).json({
+                message: "Something went wrong while uploading image",
+            });
+        }
+
+        const user = await User.findById(req.user?._id);
+        if (!user) {
+            return res.status(400).json({
+                message: "User not found",
+            });
+        }
+
+        user.profile = image?.url;
+        await user.save();
+
+        return res.status(200).json({
+            message: "Profile uploaded successfully",
+            success: true,
+            user,
+        });
+    } catch (error) {
+        return res.status(400).json({
+            message: "Profile not uploaded",
+            success: false,
+            error,
+        });
+    }
+};
+const deleteProfile = async (req, res) => {
+    try {
+        const user = await User.findById(req.user?._id);
+        if (!user) {
+            return res.status(400).json({
+                message: "User not found",
+            });
+        }
+
+        const profileImage = user.profile;
+        if (!profileImage) {
+            return res.status(200).json({
+                message: "User does not have profileImage",
+            });
+        }
+
+        const publicId = await getPublicId(profileImage);
+
+        if (!publicId) {
+            return res.status(400).json({
+                message: "Something went wrong",
+            });
+        }
+
+        await deleteMediaOnCloudinary(publicId);
+
+        user.profile = "";
+        await user.save();
+
+        return res.status(200).json({
+            message: "Profile Image Deleted",
+            success: true,
+            user,
+        });
+    } catch (error) {
+        return res.status(400).json({
+            message: "Profile Image not Deleted",
+            success: false,
+            error,
+        });
+    }
+};
+
+export { register, login, logout, getMe, changePassword, verifyEmail, uploadProfile, deleteProfile };
