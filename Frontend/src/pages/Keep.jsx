@@ -75,12 +75,10 @@ const Keep = () => {
         }
     };
 
-    // TODO : handle update and delete of tags later...
-
     const handleUpdateTag = async (tagId) => {
         setLoading(true);
         const tagData = {
-            updatedTagName,
+            tagName: updatedTagName,
         };
         try {
             const response = await tagService.updateTag(tagId, tagData);
@@ -114,12 +112,47 @@ const Keep = () => {
             });
         } finally {
             setLoading(false);
-            setIsOpen(false);
+        }
+    };
+
+    const handleDeleteTag = async (tagId) => {
+        setLoading(true);
+        try {
+            const response = await tagService.deleteTag(tagId);
+            if (response.data.success) {
+                const response = await tagService.getAllTags();
+                if (response.data.success) {
+                    setTags(response.data.tags);
+                }
+
+                toast.success(response.data.message, {
+                    position: "bottom-right",
+                    autoClose: 3000,
+                    hideProgressBar: false,
+                    closeOnClick: false,
+                    pauseOnHover: true,
+                    draggable: true,
+                    progress: undefined,
+                    theme: "dark",
+                });
+            }
+        } catch (error) {
+            toast.error(error.message, {
+                position: "bottom-right",
+                autoClose: 3000,
+                hideProgressBar: false,
+                closeOnClick: false,
+                pauseOnHover: true,
+                draggable: true,
+                progress: undefined,
+                theme: "dark",
+            });
+        } finally {
+            setLoading(false);
         }
     };
 
     useEffect(() => {
-        console.log("UseEffect run and fetchTags");
         fetchTagAndSet();
     }, []);
 
@@ -190,7 +223,7 @@ const Keep = () => {
                             </h4>
 
                             <div className="flex gap-5">
-                                <Dialog open={isOpen} onOpenChange={setIsOpen}>
+                                <Dialog>
                                     <form>
                                         <DialogTrigger asChild>
                                             <FiEdit className="cursor-pointer" />
@@ -221,7 +254,10 @@ const Keep = () => {
                                                 <DialogClose asChild>
                                                     <Button variant="outline">Cancel</Button>
                                                 </DialogClose>
-                                                <Button type="button" onClick={handleUpdateTag}>
+                                                <Button
+                                                    type="button"
+                                                    onClick={() => handleUpdateTag(tag?._id)}
+                                                >
                                                     {loading ? (
                                                         <div className="loader"></div>
                                                     ) : (
@@ -233,7 +269,10 @@ const Keep = () => {
                                     </form>
                                 </Dialog>
 
-                                <MdDelete className="cursor-pointer" />
+                                <MdDelete
+                                    onClick={() => handleDeleteTag(tag?._id)}
+                                    className="cursor-pointer"
+                                />
                             </div>
                         </div>
                     ))}

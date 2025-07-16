@@ -164,7 +164,7 @@ const Element = () => {
             setLoading(true);
             try {
                 const response = await elementService.getElementsByTagId(tagId);
-                console.log(response);
+
                 if (response.data.success) {
                     setElements(response.data.elemDocs);
 
@@ -196,7 +196,6 @@ const Element = () => {
         };
 
         if (tagId) {
-            console.log(tagId);
             init();
         }
     }, [tagId]);
@@ -235,14 +234,10 @@ const Element = () => {
                             <DialogContent className="sm:max-w-[425px]">
                                 <DialogHeader>
                                     <DialogTitle>Add Element</DialogTitle>
-                                    <DialogDescription>
-                                        <h2 className="text-red-400 font-semibold">
-                                            For Now you can only add links
-                                        </h2>
-                                        <h2 className="text-red-400 font-semibold">
-                                            Support for files and images will come in{" "}
-                                            <span className="text-blue-500 font-bold">V2</span>
-                                        </h2>
+                                    <DialogDescription className={"font-semibold text-red-400"}>
+                                        For Now you can only add links <br />
+                                        Support for files and images will come in -{" "}
+                                        <span className="text-blue-500 font-bold">V2</span>
                                     </DialogDescription>
                                 </DialogHeader>
                                 <div className="grid gap-4">
@@ -294,7 +289,7 @@ const Element = () => {
                     ) : (
                         elements.map((ele) => (
                             <div
-                                key={ele}
+                                key={ele?._id}
                                 className="w-full py-2 px-10 bg-gray-900 rounded-xl flex items-center justify-between"
                             >
                                 <div className="flex gap-3 w-[90%]">
