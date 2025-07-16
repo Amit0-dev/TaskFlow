@@ -38,13 +38,58 @@ const Login = () => {
         try {
             const response = await authService.login(formData);
             if (response.data.success) {
+                // current loggedIn user
+                const user = response.data.user;
+                // today's date
+                const todayStr = new Date().toLocaleDateString("en-CA");
 
-                loginState(response.data?.user);
+                // for finding yesterday's date
+                const yesterday = new Date();
+                yesterday.setDate(new Date().getDate() - 1);
+                const yesterdayStr = yesterday.toLocaleDateString("en-CA");
 
-                navigate("/home")
+                if (user.streak.lastUpdated === undefined) {
+                    const streakData = {
+                        current: 1,
+                        longest: 1,
+                        lastUpdated: todayStr,
+                    };
+                    const response = await authService.updateStreak(streakData);
+                    if (response.data.success) {
+                        // update the user store
+                        loginState(response.data?.user);
+                        navigate("/home");
+                    }
+                } else if (user.streak.lastUpdated === todayStr) {
+                    loginState(user);
+                    navigate("/home");
+                } else if (user.streak.lastUpdated === yesterdayStr) {
+                    const streakData = {
+                        current: user.streak.current + 1,
+                        longest: Math.max(user.streak.current + 1, user.streak.longest),
+                        lastUpdated: todayStr,
+                    };
+                    const response = await authService.updateStreak(streakData);
+                    if (response.data.success) {
+                        // update the user store
+                        loginState(response.data?.user);
+                        navigate("/home");
+                    }
+                } else {
+                    const streakData = {
+                        current: 0,
+                        longest: user.streak.longest,
+                        lastUpdated: todayStr,
+                    };
+                    const response = await authService.updateStreak(streakData);
+                    if (response.data.success) {
+                        // update the user store
+                        loginState(response.data?.user);
+                        navigate("/home");
+                    }
+                }
             }
         } catch (error) {
-
             toast.error(error.message, {
                 position: "bottom-right",
                 autoClose: 3000,

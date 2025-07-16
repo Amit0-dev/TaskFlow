@@ -33,4 +33,12 @@ export const tagService = {
             return error?.response?.data || error;
         }
     },
+    getAllTagsAndElements: async () => {
+        try {
+            const response = await axiosInstance.get("/keep/dashboard/a/te");
+            return response;
+        } catch (error) {
+            return error?.response?.data || error;
+        }
+    },
 };

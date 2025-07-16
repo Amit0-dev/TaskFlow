@@ -3,6 +3,7 @@ import {
     createTask,
     deleteTask,
     getAllTask,
+    getAllTaskOfUser,
     getYesterdayTasksForStreak,
     updateTask,
     updateTaskStatus,
@@ -18,5 +19,6 @@ router.post("/u-status/:taskId", isAuthenticated, updateTaskStatus);
 
 router.get("/tasks", isAuthenticated, getAllTask);
 router.get("/tasks/old", isAuthenticated, getYesterdayTasksForStreak);
+router.get("/dashboard/tasks", isAuthenticated, getAllTaskOfUser)
 
 export default router;

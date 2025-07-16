@@ -31,7 +31,11 @@ export const authService = {
             const response = await axiosInstance.get("/auth/me");
             return response;
         } catch (error) {
-            throw error?.response?.data || error;
+            if (error.response?.status === 401) {
+                console.warn("Not logged In...");
+            } else {
+                throw error?.response?.data || error;
+            }
         }
     },
     uploadProfile: async (formData) => {
@@ -48,6 +52,14 @@ export const authService = {
     deleteProfile: async () => {
         try {
             const response = await axiosInstance.post("/auth/delete-profile");
+            return response;
+        } catch (error) {
+            throw error?.response?.data || error;
+        }
+    },
+    updateStreak: async (data) => {
+        try {
+            const response = await axiosInstance.post("/auth/update-streak", data);
             return response;
         } catch (error) {
             throw error?.response?.data || error;

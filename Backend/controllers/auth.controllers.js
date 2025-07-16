@@ -137,6 +137,8 @@ const login = async (req, res) => {
                     name: user.name,
                     email: user.email,
                     isVerified: user.isVerified,
+                    profile: user.profile,
+                    streak: user.streak,
                 },
             });
     } catch (error) {
@@ -179,7 +181,14 @@ const getMe = async (req, res) => {
         return res.status(200).json({
             message: "User fetched successfully",
             success: true,
-            user: req?.user,
+            user: {
+                id: req?.user._id,
+                name: req?.user.name,
+                email: req?.user.email,
+                isVerified: req?.user.isVerified,
+                profile: req?.user.profile,
+                streak: req?.user.streak,
+            },
         });
     } catch (error) {
         return res.status(400).json({
@@ -351,5 +360,60 @@ const deleteProfile = async (req, res) => {
         });
     }
 };
+const updateStreak = async (req, res) => {
+    const { current, longest, lastUpdated } = req.body;
 
-export { register, login, logout, getMe, changePassword, verifyEmail, uploadProfile, deleteProfile };
+    if (!current || !longest || !lastUpdated) {
+        return res.status(400).json({
+            message: "Some fields are missing",
+        });
+    }
+    try {
+        const user = await User.findById(req.user?._id);
+
+        if (!user) {
+            return res.status(400).json({
+                message: "User not found",
+            });
+        }
+
+        user.streak = {
+            current,
+            longest,
+            lastUpdated,
+        };
+
+        await user.save();
+
+        return res.status(200).json({
+            message: "Streak updated successfully",
+            success: true,
+            user: {
+                id: user._id,
+                name: user.name,
+                email: user.email,
+                isVerified: user.isVerified,
+                profile: user.profile,
+                streak: user.streak,
+            },
+        });
+    } catch (error) {
+        return res.status(400).json({
+            message: "Streak not updated",
+            success: false,
+            error,
+        });
+    }
+};
+
+export {
+    register,
+    login,
+    logout,
+    getMe,
+    changePassword,
+    verifyEmail,
+    uploadProfile,
+    deleteProfile,
+    updateStreak
+};

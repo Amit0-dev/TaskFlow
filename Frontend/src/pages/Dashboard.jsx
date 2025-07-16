@@ -1,11 +1,17 @@
 import { authService } from "@/api/authService";
+import { tagService } from "@/api/tagService";
+import { taskService } from "@/api/taskService";
 import useAuthStore from "@/store/useAuthStore";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { ToastContainer, toast } from "react-toastify";
 
 const Dashboard = () => {
     const [localFileUrlForPreview, setLocalFileUrlForPreview] = useState(null);
     const [localFileUrl, setLocalFileUrl] = useState(null);
+
+    // for display purposes
+    const [allTasksResponse, setAllTasksResponse] = useState({});
+    const [allTagsAndElems, setAllTagsAndElems] = useState({});
 
     const [isEditClicked, setIsEditClicked] = useState(false);
 
@@ -85,9 +91,38 @@ const Dashboard = () => {
             });
         } finally {
             setLoading(false);
-            setIsEditClicked(false)
+            setIsEditClicked(false);
         }
     };
+
+    useEffect(() => {
+        const init = async () => {
+            try {
+                const response = await taskService.getAllTaskOfUser();
+                if (response.data.success) {
+                    setAllTasksResponse(response.data.response);
+                }
+            } catch (error) {
+                setAllTasksResponse({});
+            }
+        };
+
+        init();
+    }, []);
+    useEffect(() => {
+        const init = async () => {
+            try {
+                const response = await tagService.getAllTagsAndElements();
+                if (response.data.success) {
+                    setAllTagsAndElems(response.data.response);
+                }
+            } catch (error) {
+                setAllTagsAndElems({});
+            }
+        };
+
+        init();
+    }, []);
 
     return (
         <div className="w-full h-[calc(100vh-90px)]">
@@ -188,7 +223,7 @@ const Dashboard = () => {
                         )}
                     </div>
                 </div>
-                <div className="w-[70%] h-full  flex justify-between items-center gap-3 text-gray-400 ">
+                <div className="w-[70%] h-full  flex items-center gap-30 flex-wrap text-gray-400 ">
                     <div className="flex flex-col gap-4">
                         <h2 className="text-xl font-semibold tracking-wider">
                             Name: <span className="text-white ml-5">{user?.name}</span>
@@ -197,21 +232,43 @@ const Dashboard = () => {
                             Email: <span className="text-white ml-5">{user?.email}</span>
                         </h2>
                         <h2 className="text-xl font-semibold tracking-wider">
-                            TotalTaskDone: <span></span>
+                            TotalTasks:{" "}
+                            <span className="ml-5 text-yellow-400 font-semibold">
+                                {allTasksResponse?.TotalTask}
+                            </span>
                         </h2>
                         <h2 className="text-xl font-semibold tracking-wider">
-                            TotalTaskAssign: <span></span>
+                            TotalTaskCompleted:{" "}
+                            <span className="ml-5 text-green-400 font-semibold">
+                                {allTasksResponse?.TotalTaskDone}
+                            </span>
+                        </h2>
+                        <h2 className="text-xl font-semibold tracking-wider">
+                            TotalTaskMiss:{" "}
+                            <span className="ml-5 text-red-400 font-semibold">
+                                {allTasksResponse?.TotalTaskMiss}
+                            </span>
                         </h2>
                     </div>
 
                     <div className="flex flex-col gap-1">
+                        <h2 className="font-bold text-xl mb-5">
+                            Longest Streak:{" "}
+                            <span className="text-orange-500 ml-5">{user?.streak?.longest} 🔥</span>
+                        </h2>
                         <h2 className="text-yellow-500 font-semibold">📚 Keep.in Summary</h2>
                         <div className="flex flex-col gap-4">
                             <h2 className="text-xl font-semibold tracking-wider">
-                                UnCoveredElement: <span></span>
+                                TotalTags:{" "}
+                                <span className="ml-5 text-orange-400 font-semibold">
+                                    {allTagsAndElems?.totalTags}
+                                </span>
                             </h2>
                             <h2 className="text-xl font-semibold tracking-wider">
-                                TotalElement: <span></span>
+                                TotalElements:{" "}
+                                <span className="ml-5 text-blue-300 font-semibold">
+                                    {allTagsAndElems?.totalElements}
+                                </span>
                             </h2>
                         </div>
                     </div>

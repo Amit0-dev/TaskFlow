@@ -51,4 +51,12 @@ export const taskService = {
             throw error?.response?.data || error;
         }
     },
+    getAllTaskOfUser: async () => {
+        try {
+            const response = await axiosInstance.get("/task/dashboard/tasks");
+            return response
+        } catch (error) {
+            throw error?.response?.data || error;
+        }
+    }
 };

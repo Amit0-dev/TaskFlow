@@ -6,6 +6,7 @@ import {
     login,
     logout,
     register,
+    updateStreak,
     uploadProfile,
     verifyEmail,
 } from "../controllers/auth.controllers.js";
@@ -23,6 +24,7 @@ router.get("/me", isAuthenticated, getMe);
 router.post("/change-password", isAuthenticated, changePassword);
 router.post("/upload-profile", isAuthenticated, upload.single("profileImage"), uploadProfile);
 router.post("/delete-profile", isAuthenticated, deleteProfile)
+router.post("/update-streak", isAuthenticated, updateStreak)
 router.get("/verify/:token", verifyEmail);
 
 export default router;

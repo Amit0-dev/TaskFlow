@@ -24,6 +24,9 @@ function App() {
     useEffect(() => {
         const init = async () => {
             await checkAuth();
+
+            const user = useAuthStore.getState().userData;
+            if (!user) return;
             if (useAuthStore.getState().isLoggedIn) {
                 await fetchTaskAndUpdateState();
 

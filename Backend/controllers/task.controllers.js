@@ -256,6 +256,31 @@ const updateTaskStatus = async (req, res) => {
     }
 };
 
+const getAllTaskOfUser = async (req, res) => {
+    try {
+        const tasks = await Task.find({ owner: req.user?._id });
+        const response = {
+            TotalTask: tasks.length,
+            TotalTaskDone:
+                tasks.length <= 0 ? 0 : tasks.filter((task) => task.status === "Completed").length,
+            TotalTaskMiss:
+                tasks.length <= 0 ? 0 : tasks.filter((task) => task.status !== "Completed").length,
+        };
+
+        return res.status(200).json({
+            message: "Total task of loggedIn user",
+            success: true,
+            response,
+        });
+    } catch (error) {
+        return res.status(400).json({
+            message: "Tasks not fetched",
+            success: false,
+            error,
+        });
+    }
+};
+
 export {
     createTask,
     updateTask,
@@ -263,4 +288,5 @@ export {
     getAllTask,
     getYesterdayTasksForStreak,
     updateTaskStatus,
+    getAllTaskOfUser
 };

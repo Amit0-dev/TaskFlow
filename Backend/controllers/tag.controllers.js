@@ -1,4 +1,5 @@
 import { Tag } from "../models/tag.model.js";
+import { Element } from "../models/element.model.js";
 
 const createTag = async (req, res) => {
     const { tagName } = req.body;
@@ -131,4 +132,28 @@ const getAllTags = async (req, res) => {
     }
 };
 
-export { createTag, updateTag, deleteTag, getAllTags };
+const getAllTagsAndElements = async (req, res) => {
+    try {
+        const tags = await Tag.find({ userId: req.user?._id });
+        const elements = await Element.find({ userId: req.user?._id });
+
+        const response = {
+            totalTags: tags.length,
+            totalElements: elements.length,
+        };
+
+        return res.status(200).json({
+            message: "All tags and elements fetched",
+            success: true,
+            response,
+        });
+    } catch (error) {
+        return res.status(400).json({
+            message: "tags and elements are not fetched",
+            success: false,
+            error,
+        });
+    }
+};
+
+export { createTag, updateTag, deleteTag, getAllTags, getAllTagsAndElements };

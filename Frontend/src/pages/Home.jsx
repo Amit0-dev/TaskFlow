@@ -307,7 +307,9 @@ const Home = () => {
     return (
         <div className="w-full text-gray-300 pb-10">
             <div className="w-full flex flex-col items-end justify-center gap-1 h-22 p-10 ">
-                <h4 className="font-medium text-xl tracking-wide">Streak: 🔥</h4>
+                <h4 className="font-medium text-xl tracking-wide">
+                    Streak: {user?.streak?.current}🔥
+                </h4>
                 <h4 className="font-medium text-lg tracking-wide">{`Hey 👋 ${user?.name}`}</h4>
                 <h4 className="font-medium tracking-wider">📆 July 11</h4>
             </div>
