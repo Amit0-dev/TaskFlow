@@ -577,6 +577,20 @@ const Home = () => {
                 <h3 className="text-center text-3xl font-semibold mb-5 capitalize">
                     Your Past 6 Months of Activity
                 </h3>
+                <div className="flex items-center gap-5 justify-center mb-5">
+                    <h2 className="flex gap-3 font-semibold">
+                        Miss: <div className="w-6 h-6 rounded-md bg-white"></div>
+                    </h2>
+                    <h2 className="flex gap-3 font-semibold">
+                        Average: <div className="w-6 h-6 rounded-md bg-yellow-500"></div>
+                    </h2>
+                    <h2 className="flex gap-3 font-semibold">
+                        Good: <div className="w-6 h-6 rounded-md bg-green-500"></div>
+                    </h2>
+                    <h2 className="flex gap-3 font-semibold">
+                        Poor: <div className="w-6 h-6 rounded-md bg-red-500"></div>
+                    </h2>
+                </div>
 
                 <StreakHeatmap data={graphDayStreakData} />
             </div>
