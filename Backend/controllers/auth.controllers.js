@@ -37,37 +37,37 @@ const register = async (req, res) => {
             });
         }
 
-        const token = crypto.randomBytes(32).toString("hex");
+        // const token = crypto.randomBytes(32).toString("hex");
 
-        if (token) {
-            user.verificationToken = token;
+        // if (token) {
+        //     user.verificationToken = token;
 
-            await user.save();
-        }
+        //     await user.save();
+        // }
 
         // send token into mail
 
-        const options = {
-            from: process.env.MAILTRAP_SENDEREMAIL,
-            to: user.email,
-            subject: "Verify your Email",
-            text: `Please click on this link to verify your email 
-            ${process.env.BASE_URI}/api/v1/auth/verify/${token}
-            `,
-        };
+        // const options = {
+        //     from: process.env.MAILTRAP_SENDEREMAIL,
+        //     to: user.email,
+        //     subject: "Verify your Email",
+        //     text: `Please click on this link to verify your email 
+        //     ${process.env.BASE_URI}/api/v1/auth/verify/${token}
+        //     `,
+        // };
 
-        // Create a transporter for SMTP
-        const transporter = nodemailer.createTransport({
-            host: process.env.MAILTRAP_HOST,
-            port: process.env.MAILTRAP_PORT,
-            secure: false, // upgrade later with STARTTLS
-            auth: {
-                user: process.env.MAILTRAP_USERNAME,
-                pass: process.env.MAILTRAP_PASSWORD,
-            },
-        });
+        // // Create a transporter for SMTP
+        // const transporter = nodemailer.createTransport({
+        //     host: process.env.MAILTRAP_HOST,
+        //     port: process.env.MAILTRAP_PORT,
+        //     secure: false, // upgrade later with STARTTLS
+        //     auth: {
+        //         user: process.env.MAILTRAP_USERNAME,
+        //         pass: process.env.MAILTRAP_PASSWORD,
+        //     },
+        // });
 
-        await transporter.sendMail(options);
+        // await transporter.sendMail(options);
 
         return res.status(200).json({
             message: "User created successfully",
