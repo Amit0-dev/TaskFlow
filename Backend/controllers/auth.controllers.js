@@ -51,7 +51,7 @@ const register = async (req, res) => {
         //     from: process.env.MAILTRAP_SENDEREMAIL,
         //     to: user.email,
         //     subject: "Verify your Email",
-        //     text: `Please click on this link to verify your email 
+        //     text: `Please click on this link to verify your email
         //     ${process.env.BASE_URI}/api/v1/auth/verify/${token}
         //     `,
         // };
@@ -125,22 +125,20 @@ const login = async (req, res) => {
             maxAge: 24 * 60 * 60 * 1000,
         };
 
-        return res
-            .status(200)
-            .cookie("token", token, cookieOptions)
-            .json({
-                message: "User loggedIn successfully",
-                success: true,
-                token,
-                user: {
-                    id: user._id,
-                    name: user.name,
-                    email: user.email,
-                    isVerified: user.isVerified,
-                    profile: user.profile,
-                    streak: user.streak,
-                },
-            });
+        res.cookie("token", token, cookieOptions);
+
+        return res.status(200).json({
+            message: "User loggedIn successfully",
+            success: true,
+            user: {
+                id: user._id,
+                name: user.name,
+                email: user.email,
+                isVerified: user.isVerified,
+                profile: user.profile,
+                streak: user.streak,
+            },
+        });
     } catch (error) {
         return res.status(400).json({
             message: "User doesn't loggedIn successfully",
@@ -415,5 +413,5 @@ export {
     verifyEmail,
     uploadProfile,
     deleteProfile,
-    updateStreak
+    updateStreak,
 };
