@@ -36,10 +36,15 @@ const Keep = () => {
 
     const handleCreateTag = async () => {
         setLoading(true);
+
         const tagData = {
             tagName,
         };
         try {
+            if (tagName.length > 15) {
+                throw Error("Max 15 Characters are allowed");
+            }
+
             const response = await tagService.createTag(tagData);
             if (response.data.success) {
                 const response = await tagService.getAllTags();
@@ -173,7 +178,10 @@ const Keep = () => {
                                 <DialogHeader>
                                     <DialogTitle>Create Tag</DialogTitle>
                                     <DialogDescription>
-                                        TagName is basically a folder that contain file or elements
+                                        TagName is basically a folder that contain file or elements:
+                                        <span className="text-red-500 font-semibold ml-5">
+                                            Max Characters : 15
+                                        </span>
                                     </DialogDescription>
                                 </DialogHeader>
                                 <div className="grid gap-4">

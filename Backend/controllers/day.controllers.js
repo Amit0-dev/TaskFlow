@@ -11,7 +11,7 @@ const createDay = async (req, res) => {
     }
 
     try {
-        const existingDayDocs = await Day.findOne({ date: date });
+        const existingDayDocs = await Day.findOne({ date: date, userId: req.user?._id });
 
         if (existingDayDocs) {
             return res.status(400).json({
@@ -56,7 +56,7 @@ const updateDay = async (req, res) => {
     }
 
     try {
-        const dayDocs = await Day.findOne({ date: date });
+        const dayDocs = await Day.findOne({ date: date, userId: req.user?._id });
 
         if (!dayDocs) {
             return res.status(400).json({
@@ -180,7 +180,7 @@ const finalizeStatus = async (req, res) => {
     }
 
     try {
-        const dayDocs = await Day.findOne({ date: date });
+        const dayDocs = await Day.findOne({ date: date, userId: req.user?._id });
 
         if (!dayDocs) {
             return res.status(400).json({

@@ -303,7 +303,7 @@ const Element = () => {
                                             target="_blank"
                                             href={ele?.content}
                                         >
-                                            {ele?.content}
+                                            Open Now
                                         </a>
                                     </div>
                                 </div>

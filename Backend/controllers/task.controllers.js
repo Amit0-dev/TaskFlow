@@ -264,7 +264,7 @@ const getAllTaskOfUser = async (req, res) => {
             TotalTaskDone:
                 tasks.length <= 0 ? 0 : tasks.filter((task) => task.status === "Completed").length,
             TotalTaskMiss:
-                tasks.length <= 0 ? 0 : tasks.filter((task) => task.status !== "Completed").length,
+                tasks.length <= 0 ? 0 : tasks.filter((task) => task.status === "Skipped").length,
         };
 
         return res.status(200).json({

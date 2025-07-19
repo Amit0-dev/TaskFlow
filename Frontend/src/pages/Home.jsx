@@ -120,6 +120,8 @@ const Home = () => {
                 if (response.data.success) {
                     // set task state into store
 
+                    addTaskState(response.data.tasks);
+
                     const dayCreatedDate = localStorage.getItem("dayCreatedDate");
                     const todayDate = new Date().toLocaleDateString("en-CA");
 
@@ -136,8 +138,6 @@ const Home = () => {
 
                         localStorage.setItem("dayCreatedDate", todayDate);
                     }
-
-                    addTaskState(response.data.tasks);
                 }
             }
         } catch (error) {
