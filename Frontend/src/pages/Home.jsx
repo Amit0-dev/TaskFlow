@@ -96,11 +96,20 @@ const Home = () => {
         setGraphDayStreakData(graphData);
     }, [days]);
 
-    // const sampleData = [
-    //     { date: "2025-07-01", status: "Completed", count: 5 },
-    //     { date: "2025-07-02", status: "Partial", count: 2 },
-    //     { date: "2025-07-03", status: "None", count: 0 },
-    // ];
+    const months = {
+        0: "January",
+        1: "February",
+        2: "March",
+        3: "April",
+        4: "May",
+        5: "June",
+        6: "July",
+        7: "August",
+        8: "September",
+        9: "October",
+        10: "November",
+        11: "December",
+    };
 
     const handleTaskSubmit = async () => {
         setLoading(true);
@@ -311,7 +320,7 @@ const Home = () => {
                     Streak: {user?.streak?.current}🔥
                 </h4>
                 <h4 className="font-medium text-lg tracking-wide">{`Hey 👋 ${user?.name}`}</h4>
-                <h4 className="font-medium tracking-wider">📆 July 11</h4>
+                <h4 className="font-medium tracking-wider">{`📆 ${months[new Date().getMonth()]} ${new Date().getDate()}`}</h4>
             </div>
 
             <div className="w-full ">
