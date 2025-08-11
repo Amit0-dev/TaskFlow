@@ -364,7 +364,7 @@ const deleteProfile = async (req, res) => {
 const updateStreak = async (req, res) => {
     const { current, longest, lastUpdated } = req.body;
 
-    if (!current || !longest || !lastUpdated) {
+    if (isNaN(current) || isNaN(longest) || !lastUpdated) {
         return res.status(400).json({
             message: "Some fields are missing",
         });

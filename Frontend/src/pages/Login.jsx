@@ -77,7 +77,7 @@ const Login = () => {
                     }
                 } else {
                     const streakData = {
-                        current: 0,
+                        current: 1,
                         longest: user.streak.longest,
                         lastUpdated: todayStr,
                     };
