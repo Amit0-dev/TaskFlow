@@ -152,6 +152,7 @@ const logout = async (req, res) => {
     const cookieOptions = {
         httpOnly: true,
         secure: true,
+        sameSite: "none",
     };
 
     res.clearCookie("token", cookieOptions);
